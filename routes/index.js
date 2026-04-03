@@ -10,7 +10,6 @@ app.use(cors());
 app.use("/api/webhook", express.raw({ type: "application/json" }));
 app.use(express.json());
 
-// 🔔 Lemon Squeezy webhook
 app.post("/api/webhook", async (req, res) => {
   const secret = process.env.LEMON_SQUEEZY_WEBHOOK_SECRET;
   const signature = req.headers["x-signature"];
@@ -29,16 +28,13 @@ app.post("/api/webhook", async (req, res) => {
   if (event.meta?.event_name === "license_key_created") {
     const key = event.data.attributes.key;
     const email = event.data.attributes.user_email;
-
     const { error } = await supabase
       .from("licenses")
       .insert({ key, email, active: true });
-
     if (error) console.error("Supabase error:", error);
     else console.log("License saved:", key);
   }
 
-  // Deactivate license on refund
   if (event.meta?.event_name === "order_refunded") {
     const email = event.data.attributes.user_email;
     await supabase
@@ -51,7 +47,6 @@ app.post("/api/webhook", async (req, res) => {
   res.sendStatus(200);
 });
 
-// 🔑 Verify license (called by your .exe)
 app.post("/api/verify", async (req, res) => {
   const { key, hwid } = req.body;
 
